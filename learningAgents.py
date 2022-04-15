@@ -13,8 +13,43 @@
 
 
 from game import Directions, Agent, Actions
+from geneticUtils import bitstring_to_float, bitstring_to_twos_complement
 
 import random,util,time
+
+
+class GeneticAgent(Agent):
+    """"
+    Agent which makes decisions using a "genome"
+    """
+
+    def __init__(self, genome, num_feats, extractor, weightbits=32, expbits=4):
+        self.genome = genome
+        self.weights = []
+        self.exps = []
+        self.num_feats = num_feats
+        self.feature_extractor = extractor
+
+        ln = weightbits + expbits
+        for i in range(num_feats):
+            self.weights.append(bitstring_to_float(self.genome[ln*i:ln*i + weightbits]))
+            self.exps.append(bitstring_to_twos_complement(self.genome[ln*i + weightbits:ln*(i+1)]))
+
+    def getAction(self, state):
+        # do weighted combination with exponentials
+        acts = state.getLegalActions()
+        if not acts:
+            return None
+        best = acts[0]
+        for act in acts:
+            if self.calc_value(act, state) > self.calc_value(best, state):
+                best = act
+        return best
+
+    def calc_value(self, action, state):
+        feats = self.feature_extractor.getFeatures(state, action).values()
+        return sum([self.weights[i]*(feat ** self.exps[i]) for i, feat in enumerate(feats)])
+
 
 class ValueEstimationAgent(Agent):
     """
