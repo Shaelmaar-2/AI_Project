@@ -23,15 +23,15 @@ class GeneticAgent(Agent):
     Agent which makes decisions using a "genome"
     """
 
-    def __init__(self, genome, num_feats, extractor, weightbits=32, expbits=4):
+    def __init__(self, genome, extractor, weightbits=32, expbits=4):
         self.genome = genome
         self.weights = []
         self.exps = []
-        self.num_feats = num_feats
+        self.num_feats = len(genome) // (weightbits + expbits)
         self.feature_extractor = extractor
 
         ln = weightbits + expbits
-        for i in range(num_feats):
+        for i in range(self.num_feats):
             self.weights.append(bitstring_to_float(self.genome[ln*i:ln*i + weightbits]))
             self.exps.append(bitstring_to_twos_complement(self.genome[ln*i + weightbits:ln*(i+1)]))
 
