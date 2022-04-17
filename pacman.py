@@ -51,6 +51,7 @@ from featureExtractors import SimpleExtractor, AdvancedExtractor
 from functools import reduce
 import util, layout
 import sys, types, time, random, os
+import pickle as pkl
 
 ###################################################
 # YOUR INTERFACE TO THE PACMAN WORLD: A GameState #
@@ -692,10 +693,19 @@ if __name__ == '__main__':
     args = readCommand( sys.argv[1:] ) # Get game components based on input
     pop = [reduce(str.__add__, [str(random.randint(0, 1)) for k in range(252)]) for j in range(100)]
     fitness_fn = lambda gen: eval(gen, **args)
-    for i in range(1000):
+    dataList = []
+    gens = []
+    avgs = []
+    for i in range(10):
         next_gen, results = evolve(pop, fitness_fn, 20, 0.8, 1/float(144))
         pop = next_gen
-        print('---------------------------', sum(results)/float(len(results)))
+        avg = sum(results)/float(len(results))
+        gens.append(i)
+        avgs.append(avg)
+        print('---------------------------', avg)
+    dataList.append(gens)
+    dataList.append(avgs)
+    pkl.dump(dataList, open('GeneticsData.pkl', 'wb'))
 
 
     # import cProfile
