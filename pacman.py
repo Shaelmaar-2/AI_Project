@@ -45,6 +45,10 @@ from game import Directions
 from game import Actions
 from util import nearestPoint
 from util import manhattanDistance
+from learningAgents import GeneticAgent
+from geneticUtils import *
+from featureExtractors import SimpleExtractor, AdvancedExtractor
+from functools import reduce
 import util, layout
 import sys, types, time, random, os
 
@@ -271,7 +275,8 @@ class ClassicGameRules:
     def __init__(self, timeout=30):
         self.timeout = timeout
 
-    def newGame( self, layout, pacmanAgent, ghostAgents, display, quiet = False, catchExceptions=False):
+    def \
+            newGame( self, layout, pacmanAgent, ghostAgents, display, quiet = False, catchExceptions=False):
         agents = [pacmanAgent] + ghostAgents[:layout.getNumGhosts()]
         initState = GameState()
         initState.initialize( layout, len(ghostAgents) )
@@ -665,6 +670,14 @@ def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0
 
     return games
 
+def eval( genome, layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30 ):
+
+    pac = GeneticAgent(genome, AdvancedExtractor())
+    import textDisplay
+    games = runGames( layout, pac, ghosts, textDisplay.NullGraphics(), numGames, record, numTraining = 0, catchExceptions=False, timeout=30 )
+    return games[0].state.data.score
+
+
 if __name__ == '__main__':
     """
     The main function called when pacman.py is run
@@ -677,7 +690,13 @@ if __name__ == '__main__':
     > python pacman.py --help
     """
     args = readCommand( sys.argv[1:] ) # Get game components based on input
-    runGames( **args )
+    pop = [reduce(str.__add__, [str(random.randint(0, 1)) for k in range(252)]) for j in range(100)]
+    fitness_fn = lambda gen: eval(gen, **args)
+    for i in range(1000):
+        next_gen, results = evolve(pop, fitness_fn, 20, 0.8, 1/float(144))
+        pop = next_gen
+        print('---------------------------', sum(results)/float(len(results)))
+
 
     # import cProfile
     # cProfile.run("runGames( **args )")

@@ -38,8 +38,8 @@ class GeneticAgent(Agent):
     def getAction(self, state):
         # do weighted combination with exponentials
         acts = state.getLegalActions()
-        if not acts:
-            return None
+        # if not acts:
+        #     return None
         best = acts[0]
         for act in acts:
             if self.calc_value(act, state) > self.calc_value(best, state):
@@ -48,7 +48,7 @@ class GeneticAgent(Agent):
 
     def calc_value(self, action, state):
         feats = self.feature_extractor.getFeatures(state, action).values()
-        return sum([self.weights[i]*(feat ** self.exps[i]) for i, feat in enumerate(feats)])
+        return sum([self.weights[i]*(feat) for i, feat in enumerate(feats) if feat != 0])
 
 
 class ValueEstimationAgent(Agent):
