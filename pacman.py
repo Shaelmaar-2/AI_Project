@@ -46,11 +46,13 @@ from game import Actions
 from util import nearestPoint
 from util import manhattanDistance
 from learningAgents import GeneticAgent
+from qlearningAgents import ApproximateQAgent
 from geneticUtils import *
 from featureExtractors import SimpleExtractor, AdvancedExtractor
 from functools import reduce
 import util, layout
 import sys, types, time, random, os
+# import pickle as pkl
 
 ###################################################
 # YOUR INTERFACE TO THE PACMAN WORLD: A GameState #
@@ -528,6 +530,9 @@ def readCommand( argv ):
                       help='Turns on exception handling and timeouts during games', default=False)
     parser.add_option('--timeout', dest='timeout', type='int',
                       help=default('Maximum length of time an agent can spend computing in a single game'), default=30)
+    parser.add_option('--gen',action='store_true',dest='genetic',
+                      help='Is this a genentic agent?', default=False)
+    parser.add_option('--numGens',dest='numGens',type='int',default=0)
 
     options, otherjunk = parser.parse_args(argv)
     if len(otherjunk) != 0:
@@ -575,6 +580,8 @@ def readCommand( argv ):
     args['record'] = options.record
     args['catchExceptions'] = options.catchExceptions
     args['timeout'] = options.timeout
+    args['genetic'] = options.genetic
+    args['numGens'] = options.numGens
 
     # Special case: recorded games don't use the runGames method or args structure
     if options.gameToReplay != None:
@@ -630,7 +637,9 @@ def replayGame( layout, actions, display ):
 
     display.finish()
 
-def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30 ):
+# gen_wins = 0
+
+def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30, genetic=False, numGens=0 ):
     import __main__
     __main__.__dict__['_display'] = display
 
@@ -663,6 +672,8 @@ def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0
         scores = [game.state.getScore() for game in games]
         wins = [game.state.isWin() for game in games]
         winRate = wins.count(True)/ float(len(wins))
+        # global gen_wins
+        # gen_wins += wins.count(True)
         print 'Average Score:', sum(scores) / float(len(scores))
         print 'Scores:       ', ', '.join([str(score) for score in scores])
         print 'Win Rate:      %d/%d (%.2f)' % (wins.count(True), len(wins), winRate)
@@ -670,7 +681,7 @@ def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0
 
     return games
 
-def eval( genome, layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30 ):
+def eval( genome, layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30, genetic=False, numGens=0 ):
 
     pac = GeneticAgent(genome, AdvancedExtractor())
     import textDisplay
@@ -681,7 +692,6 @@ def eval( genome, layout, pacman, ghosts, display, numGames, record, numTraining
     elif games[0].state.data._lose:
         res = 'Loss'
     return games[0].state.data.score, res
-
 
 if __name__ == '__main__':
     """
@@ -695,25 +705,31 @@ if __name__ == '__main__':
     > python pacman.py --help
     """
     args = readCommand( sys.argv[1:] ) # Get game components based on input
-    pop = [reduce(str.__add__, [str(random.randint(0, 1)) for k in range(252)]) for j in range(100)]
-    fitness_fn = lambda gen: eval(gen, **args)
-    fitted = []
-    for i in range(8):
-        next_gen, results, fitted = evolve(pop, fitness_fn, 20, 0.8, 1/float(252))
-        pop = next_gen
-        print '\ngeneration {} results\n'.format(i)
-        print '{} wins, {} losses, {} avg score\n'.format(sum([1 for res in results if res[1] == 'Win']),
-                                                        sum([1 for res in results if res[1] == 'Loss']),
-                                                        sum([res[0] for res in results])/float(len(results)))
-        print '================================'
+    if args['genetic']:
+        pop = [reduce(str.__add__, [str(random.randint(0, 1)) for k in range(252)]) for j in range(100)]
+        fitness_fn = lambda gen: eval(gen, **args)
+        # dataList = []
+        # gens = []
+        # avgs = []
+        # winrates = []
+        numGens = args['numGens']
+        for i in range(numGens):
+            next_gen, results = evolve(pop, fitness_fn, 20, 0.8, 1/float(144))
+            pop = next_gen
+            avg = sum(results)/float(len(results))
+            # gens.append(i)
+            # avgs.append(avg)
+            # winrates.append(gen_wins/float(len(results)))
+            # gen_wins = 0
+            print('---------------------------', avg)
+        
+        # dataList.append(gens)
+        # dataList.append(avgs)
+        # dataList.append(winrates)
+        # pkl.dump(dataList, open('GeneticsData.pkl', 'wb'))
 
-    best_genome = fitted[-1][0]
-
-    args['numGames'] = 10
-
-    args['pacman'] = GeneticAgent(genome=best_genome, extractor=AdvancedExtractor())
-
-    runGames(**args)
+    else:
+        runGames( **args )
 
     # import cProfile
     # cProfile.run("runGames( **args )")
