@@ -639,7 +639,7 @@ def replayGame( layout, actions, display ):
 
 # gen_wins = 0
 
-def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30 ):
+def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30, genetic=False, numGens=0 ):
     import __main__
     __main__.__dict__['_display'] = display
 
@@ -700,7 +700,6 @@ if __name__ == '__main__':
     > python pacman.py --help
     """
     args = readCommand( sys.argv[1:] ) # Get game components based on input
-    print( args )
         
     if args['genetic']:
         pop = [reduce(str.__add__, [str(random.randint(0, 1)) for k in range(252)]) for j in range(100)]
@@ -717,7 +716,7 @@ if __name__ == '__main__':
             # gens.append(i)
             # avgs.append(avg)
             # winrates.append(gen_wins/float(len(results)))
-            gen_wins = 0
+            # gen_wins = 0
             print('---------------------------', avg)
         
         # dataList.append(gens)
