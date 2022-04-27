@@ -48,7 +48,26 @@ class GeneticAgent(Agent):
 
     def calc_value(self, action, state):
         feats = self.feature_extractor.getFeatures(state, action).values()
-        return sum([self.weights[i]*(feat) for i, feat in enumerate(feats) if feat != 0])
+        return sum([self.weights[i]*(feat ** self.exps[i]) for i, feat in enumerate(feats) if feat != 0])
+
+
+class InstinctAgent(Agent):
+    """
+    Agent where the genome literally represents a series of moves
+    """
+    def __init__(self, genome):
+        self.genome = genome
+        self.dct = {'00': 'North', '01': 'East', '10': 'South', '11': 'West'}
+        self.mv = 0
+
+    def getAction(self, state):
+        acts = state.getLegalActions()
+        nxt = self.genome[self.mv:self.mv+1]
+        if nxt in acts:
+            self.mv = (self.mv + 2) % len(self.genome)
+            return nxt
+        else:
+            return random.choice(acts)
 
 
 class ValueEstimationAgent(Agent):

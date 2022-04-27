@@ -53,9 +53,10 @@ def evolve(generation, fitness_fn, mating_size, cr_prob, mut_prob):
     # let them "choose" best mate
     # mate them, and repeat with others
     next_generation = []
-    results = []
     generation = sorted([(spec, fitness_fn(spec)) for spec in generation], key=lambda x: x[1])
-    generation = generation[3*len(generation)/4:] * 4
+    fitted = generation
+    results = [spec[-1] for spec in generation]
+    generation = generation[len(generation)/2:] * 2
     while generation:
         if len(generation) >= mating_size:
             pool = r.sample(generation, mating_size)
@@ -67,8 +68,6 @@ def evolve(generation, fitness_fn, mating_size, cr_prob, mut_prob):
         res = mate(best[0], mte[0], cr_prob, mut_prob)
         next_generation.append(res[0])
         next_generation.append(res[1])
-        results.append(best[1])
-        results.append(mte[1])
         generation.remove(best)
         generation.remove(mte)
-    return next_generation, results
+    return next_generation, results, fitted

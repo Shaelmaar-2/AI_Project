@@ -1,0 +1,1 @@
+rewrite lem (size (perfect x)) (size (perfect x)) | lem (size (perfect x)) (size (perfect x)) = refl

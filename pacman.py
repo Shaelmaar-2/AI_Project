@@ -675,7 +675,12 @@ def eval( genome, layout, pacman, ghosts, display, numGames, record, numTraining
     pac = GeneticAgent(genome, AdvancedExtractor())
     import textDisplay
     games = runGames( layout, pac, ghosts, textDisplay.NullGraphics(), numGames, record, numTraining = 0, catchExceptions=False, timeout=30 )
-    return games[0].state.data.score
+    res = ''
+    if games[0].state.data._win:
+        res = 'Win'
+    elif games[0].state.data._lose:
+        res = 'Loss'
+    return games[0].state.data.score, res
 
 
 if __name__ == '__main__':
@@ -692,11 +697,23 @@ if __name__ == '__main__':
     args = readCommand( sys.argv[1:] ) # Get game components based on input
     pop = [reduce(str.__add__, [str(random.randint(0, 1)) for k in range(252)]) for j in range(100)]
     fitness_fn = lambda gen: eval(gen, **args)
-    for i in range(1000):
-        next_gen, results = evolve(pop, fitness_fn, 20, 0.8, 1/float(144))
+    fitted = []
+    for i in range(8):
+        next_gen, results, fitted = evolve(pop, fitness_fn, 20, 0.8, 1/float(252))
         pop = next_gen
-        print('---------------------------', sum(results)/float(len(results)))
+        print '\ngeneration {} results\n'.format(i)
+        print '{} wins, {} losses, {} avg score\n'.format(sum([1 for res in results if res[1] == 'Win']),
+                                                        sum([1 for res in results if res[1] == 'Loss']),
+                                                        sum([res[0] for res in results])/float(len(results)))
+        print '================================'
 
+    best_genome = fitted[-1][0]
+
+    args['numGames'] = 10
+
+    args['pacman'] = GeneticAgent(genome=best_genome, extractor=AdvancedExtractor())
+
+    runGames(**args)
 
     # import cProfile
     # cProfile.run("runGames( **args )")
