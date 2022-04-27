@@ -50,9 +50,10 @@ from qlearningAgents import ApproximateQAgent
 from geneticUtils import *
 from featureExtractors import SimpleExtractor, AdvancedExtractor
 from functools import reduce
+import time
 import util, layout
 import sys, types, time, random, os
-# import pickle as pkl
+import pickle as pkl
 
 ###################################################
 # YOUR INTERFACE TO THE PACMAN WORLD: A GameState #
@@ -269,6 +270,8 @@ SCARED_TIME = 40    # Moves ghosts are scared
 COLLISION_TOLERANCE = 0.7 # How close ghosts must be to Pacman to kill
 TIME_PENALTY = 1 # Number of points lost each round
 
+global quietTestsBool
+
 class ClassicGameRules:
     """
     These game rules manage the control flow of a game, deciding when
@@ -277,8 +280,7 @@ class ClassicGameRules:
     def __init__(self, timeout=30):
         self.timeout = timeout
 
-    def \
-            newGame( self, layout, pacmanAgent, ghostAgents, display, quiet = False, catchExceptions=False):
+    def newGame( self, layout, pacmanAgent, ghostAgents, display, quiet = False, catchExceptions=False):
         agents = [pacmanAgent] + ghostAgents[:layout.getNumGhosts()]
         initState = GameState()
         initState.initialize( layout, len(ghostAgents) )
@@ -296,11 +298,11 @@ class ClassicGameRules:
         if state.isLose(): self.lose(state, game)
 
     def win( self, state, game ):
-        if not self.quiet: print "Pacman emerges victorious! Score: %d" % state.data.score
+        if not self.quiet and not quietTestsBool: print "Pacman emerges victorious! Score: %d" % state.data.score
         game.gameOver = True
 
     def lose( self, state, game ):
-        if not self.quiet: print "Pacman died! Score: %d" % state.data.score
+        if not self.quiet and not quietTestsBool: print "Pacman died! Score: %d" % state.data.score
         game.gameOver = True
 
     def getProgress(self, game):
@@ -502,14 +504,14 @@ def readCommand( argv ):
                       metavar='LAYOUT_FILE', default='mediumClassic')
     parser.add_option('-p', '--pacman', dest='pacman',
                       help=default('the agent TYPE in the pacmanAgents module to use'),
-                      metavar='TYPE', default='KeyboardAgent')
+                      metavar='TYPE', default='Agent')
     parser.add_option('-t', '--textGraphics', action='store_true', dest='textGraphics',
                       help='Display output as text only', default=False)
     parser.add_option('-q', '--quietTextGraphics', action='store_true', dest='quietGraphics',
                       help='Generate minimal output and no graphics', default=False)
     parser.add_option('-g', '--ghosts', dest='ghost',
                       help=default('the ghost agent TYPE in the ghostAgents module to use'),
-                      metavar = 'TYPE', default='RandomGhost')
+                      metavar = 'TYPE', default='DirectionalGhost')
     parser.add_option('-k', '--numghosts', type='int', dest='numGhosts',
                       help=default('The maximum number of ghosts to use'), default=4)
     parser.add_option('-z', '--zoom', type='float', dest='zoom',
@@ -532,7 +534,9 @@ def readCommand( argv ):
                       help=default('Maximum length of time an agent can spend computing in a single game'), default=30)
     parser.add_option('--gen',action='store_true',dest='genetic',
                       help='Is this a genentic agent?', default=False)
-    parser.add_option('--numGens',dest='numGens',type='int',default=0)
+    parser.add_option('--numGens',dest='numGens',type='int',default=10)
+    parser.add_option('--pop',dest='population',type='int',default=100)
+    parser.add_option('--quietTests',action='store_true',dest='quietTests',default=False)
 
     options, otherjunk = parser.parse_args(argv)
     if len(otherjunk) != 0:
@@ -582,6 +586,8 @@ def readCommand( argv ):
     args['timeout'] = options.timeout
     args['genetic'] = options.genetic
     args['numGens'] = options.numGens
+    args['population'] = options.population
+    args['quietTests'] = options.quietTests
 
     # Special case: recorded games don't use the runGames method or args structure
     if options.gameToReplay != None:
@@ -637,9 +643,9 @@ def replayGame( layout, actions, display ):
 
     display.finish()
 
-# gen_wins = 0
+gen_wins = 0
 
-def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30, genetic=False, numGens=0 ):
+def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30, genetic=False, numGens=10, population=100, quietTests=False ):
     import __main__
     __main__.__dict__['_display'] = display
 
@@ -656,7 +662,7 @@ def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0
         else:
             gameDisplay = display
             rules.quiet = False
-        game = rules.newGame( layout, pacman, ghosts, gameDisplay, beQuiet, catchExceptions)
+        game = rules.newGame( layout, pacman, ghosts, gameDisplay, beQuiet, catchExceptions )
         game.run()
         if not beQuiet: games.append(game)
 
@@ -672,26 +678,22 @@ def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0
         scores = [game.state.getScore() for game in games]
         wins = [game.state.isWin() for game in games]
         winRate = wins.count(True)/ float(len(wins))
-        # global gen_wins
-        # gen_wins += wins.count(True)
-        print 'Average Score:', sum(scores) / float(len(scores))
-        print 'Scores:       ', ', '.join([str(score) for score in scores])
-        print 'Win Rate:      %d/%d (%.2f)' % (wins.count(True), len(wins), winRate)
-        print 'Record:       ', ', '.join([ ['Loss', 'Win'][int(w)] for w in wins])
+        global gen_wins
+        gen_wins += wins.count(True)
+        if not quietTestsBool:
+            print 'Average Score:', sum(scores) / float(len(scores))
+            print 'Scores:       ', ', '.join([str(score) for score in scores])
+            print 'Win Rate:      %d/%d (%.2f)' % (wins.count(True), len(wins), winRate)
+            print 'Record:       ', ', '.join([ ['Loss', 'Win'][int(w)] for w in wins])
 
     return games
 
-def eval( genome, layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30, genetic=False, numGens=0 ):
+def eval( genome, layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30, genetic=False, numGens=10, population=100, quietTests=False ):
 
     pac = GeneticAgent(genome, AdvancedExtractor())
     import textDisplay
-    games = runGames( layout, pac, ghosts, textDisplay.NullGraphics(), numGames, record, numTraining = 0, catchExceptions=False, timeout=30 )
-    res = ''
-    if games[0].state.data._win:
-        res = 'Win'
-    elif games[0].state.data._lose:
-        res = 'Loss'
-    return games[0].state.data.score, res
+    games = runGames( layout, pac, ghosts, textDisplay.NullGraphics(), numGames, record, numTraining = 0, catchExceptions=False, timeout=30, quietTests=False )
+    return games[0].state.data.score
 
 if __name__ == '__main__':
     """
@@ -704,32 +706,43 @@ if __name__ == '__main__':
 
     > python pacman.py --help
     """
+    start = time.time()
     args = readCommand( sys.argv[1:] ) # Get game components based on input
+    if args['quietTests']:
+        quietTestsBool = True
+    else:
+        quietTestsBool = False
+        
     if args['genetic']:
-        pop = [reduce(str.__add__, [str(random.randint(0, 1)) for k in range(252)]) for j in range(100)]
+        population = args['population']
+        pop = [reduce(str.__add__, [str(random.randint(0, 1)) for k in range(252)]) for j in range(population)]
         fitness_fn = lambda gen: eval(gen, **args)
-        # dataList = []
-        # gens = []
-        # avgs = []
-        # winrates = []
+        dataList = []
+        gens = []
+        avgs = []
+        winrates = []
         numGens = args['numGens']
         for i in range(numGens):
             next_gen, results = evolve(pop, fitness_fn, 20, 0.8, 1/float(144))
             pop = next_gen
             avg = sum(results)/float(len(results))
-            # gens.append(i)
-            # avgs.append(avg)
-            # winrates.append(gen_wins/float(len(results)))
-            # gen_wins = 0
-            print('---------------------------', avg)
+            winrate = gen_wins/float(len(results))
+            gens.append(i)
+            avgs.append(avg)
+            winrates.append(winrate)
+            gen_wins = 0
+            print('Generation: '+str(i), 'Average Score: '+str(avg), 'Average Winrate: '+str(winrate))
         
-        # dataList.append(gens)
-        # dataList.append(avgs)
-        # dataList.append(winrates)
-        # pkl.dump(dataList, open('GeneticsData.pkl', 'wb'))
+        dataList.append(gens)
+        dataList.append(avgs)
+        dataList.append(winrates)
+        pkl.dump(dataList, open('GeneticsDefault.pkl', 'wb'))
 
     else:
         runGames( **args )
+
+    end = time.time()
+    print('Training finished in '+str(end-start)+' seconds')
 
     # import cProfile
     # cProfile.run("runGames( **args )")
