@@ -723,7 +723,7 @@ if __name__ == '__main__':
         winrates = []
         numGens = args['numGens']
         for i in range(numGens):
-            next_gen, results = evolve(pop, fitness_fn, 20, 0.8, 1/float(144))
+            next_gen, results, fitted = evolve(pop, fitness_fn, 20, 0.8, 1/float(144))
             pop = next_gen
             avg = sum(results)/float(len(results))
             winrate = gen_wins/float(len(results))
