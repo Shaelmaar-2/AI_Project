@@ -87,15 +87,17 @@ def evolve(generation, fitnss_fn, mating_size=20, cr_prob=0.80, mut_prob=None, e
     if elitism_size > 0:
         next_generation += [spec[0] for spec in generation[-elitism_size:]]
 
-    fitted = generation
-    results = [spec[-1] for spec in generation]
+    fitted = [spec[0] for spec in generation]
+    results = [spec[1] for spec in generation]
 
-    if (size * cull_prop) % 1 != 0 or cull_prop < 0.5:
-        raise ValueError("generation size is not divisible into cull proportions")
-    if repl:
-        generation = generation[int(size*cull_prop):]
-    else:
-        generation = generation[int(size*cull_prop):] * cull_int(cull_prop)
+    if cull_prop != 0:
+        if (size * cull_prop) % 1 != 0 or cull_prop < 0.5:
+            raise ValueError("generation size is not divisible into cull proportions")
+        if repl:
+            generation = generation[int(size*cull_prop):]
+        else:
+            generation = generation[int(size*cull_prop):] * cull_int(cull_prop)
+
     while len(next_generation) < size:
         if len(generation) >= mating_size:
             pool = r.sample(generation, mating_size)
