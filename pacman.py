@@ -270,6 +270,7 @@ SCARED_TIME = 40    # Moves ghosts are scared
 COLLISION_TOLERANCE = 0.7 # How close ghosts must be to Pacman to kill
 TIME_PENALTY = 1 # Number of points lost each round
 
+# Used by the quietTests command line argument, which significantly cuts down runtime for the genetic agent
 global quietTestsBool
 
 class ClassicGameRules:
@@ -532,11 +533,17 @@ def readCommand( argv ):
                       help='Turns on exception handling and timeouts during games', default=False)
     parser.add_option('--timeout', dest='timeout', type='int',
                       help=default('Maximum length of time an agent can spend computing in a single game'), default=30)
+
+    # The following arguments only pertain to genetic agents
     parser.add_option('--gen',action='store_true',dest='genetic',
                       help='Is this a genentic agent?', default=False)
-    parser.add_option('--numGens',dest='numGens',type='int',default=15)
-    parser.add_option('--pop',dest='population',type='int',default=100)
-    parser.add_option('--quietTests',action='store_true',dest='quietTests',default=False)
+    parser.add_option('--numGens',dest='numGens',type='int',default=15,
+                      help='Number of generations for genetic agent training')
+    parser.add_option('--pop',dest='population',type='int',default=100,
+                      help='Population size for genetic agent (USE DEFAULT)')
+    # Prevents print statements while the genetic agent is learning, this significantly cuts down runtime
+    parser.add_option('--quietTests',action='store_true',dest='quietTests',default=False,
+                      help='Mutes all print statements outside of the main function')
 
     options, otherjunk = parser.parse_args(argv)
     if len(otherjunk) != 0:
@@ -584,6 +591,8 @@ def readCommand( argv ):
     args['record'] = options.record
     args['catchExceptions'] = options.catchExceptions
     args['timeout'] = options.timeout
+
+    # The following arguments only pertain to genetic agents
     args['genetic'] = options.genetic
     args['numGens'] = options.numGens
     args['population'] = options.population
@@ -645,7 +654,7 @@ def replayGame( layout, actions, display ):
 
 gen_wins = 0
 
-def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30, genetic=False, numGens=10, population=100, quietTests=False ):
+def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30, genetic=False, numGens=10, population=100, quietTests=False, ):
     import __main__
     __main__.__dict__['_display'] = display
 
@@ -688,7 +697,12 @@ def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0
 
     return games
 
-def eval( genome, layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30, genetic=False, numGens=10, population=100, quietTests=False ):
+def eval( genome, layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30, genetic=False, numGens=10, population=100, quietTests=False, ):
+    """
+    A helper function to run games with a genetic agent. Creates a genetic agent
+    with its corresponding genome, and then runs a single game. We store the score
+    to represent the agent's performance.
+    """
 
     pac = GeneticAgent(genome, AdvancedExtractor())
     import textDisplay
@@ -708,24 +722,40 @@ if __name__ == '__main__':
     """
     start = time.time()
     args = readCommand( sys.argv[1:] ) # Get game components based on input
+
+    # This is not the most elegant way to mute all the post-game print
+    # statements, but we could not find another way to do this without causing
+    # problems.
     if args['quietTests']:
         quietTestsBool = True
     else:
         quietTestsBool = False
         
     if args['genetic']:
-        hypes = {'mut_prob': [5/float(252), 25/float(252), 1/float(4*252)], 'cr_prob': [0.99,0.4,0.15], 'repl': [True]}
+
+        # We used hypes to change hyperparameters during our testing. In
+        # theory, hypes can be a dictionary with all of the various parameters
+        # you would like to test, but training gets exponentially slower for
+        # some reason, and we could not figure out why.
+        hypes = {'cr_prob':[0.80]}
+
         for name,l in hypes.items():
             for val in l:
                 population = args['population']
                 pop = [reduce(str.__add__, [str(random.randint(0, 1)) for k in range(252)]) for j in range(population)]
                 fitness_fn = lambda gen: eval(gen, **args)
+
+                # Used for training data collection
                 dataList = []
                 gens = []
                 avgs = []
                 winrates = []
+
                 numGens = args['numGens']
                 final_fitted = []
+                start = time.time()
+
+                # Here's where the training happens
                 for i in range(numGens):
                     next_gen, results, fitted = evolve(pop, fitness_fn,**{name:val})
                     pop = next_gen
@@ -737,6 +767,13 @@ if __name__ == '__main__':
                     gen_wins = 0
                     final_fitted = fitted[-10:]
                     print('Generation: '+str(i), 'Average Score: '+str(avg), 'Average Winrate: '+str(winrate))
+                end = time.time()
+                print('Training finished in '+str(end-start)+' seconds')
+
+                # Here, we decide the single best performing agent after
+                # training. We take the top 10 agents from the last generation,
+                # make them each play 10 games, and then choose the best agent
+                # to be used for testing.
                 best = None
                 best_score = None
                 best_wr = None
@@ -759,6 +796,8 @@ if __name__ == '__main__':
                         best_wr = temp_wr
                         best_score = temp_score
                         best = final_fitted[i]
+                
+                gen_wins = 0
                
                 dataList.append(gens)
                 dataList.append(avgs)
@@ -769,9 +808,6 @@ if __name__ == '__main__':
 
     else:
         runGames( **args )
-
-    end = time.time()
-    print('Training finished in '+str(end-start)+' seconds')
 
     # import cProfile
     # cProfile.run("runGames( **args )")
