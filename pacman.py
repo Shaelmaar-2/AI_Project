@@ -534,7 +534,7 @@ def readCommand( argv ):
                       help=default('Maximum length of time an agent can spend computing in a single game'), default=30)
     parser.add_option('--gen',action='store_true',dest='genetic',
                       help='Is this a genentic agent?', default=False)
-    parser.add_option('--numGens',dest='numGens',type='int',default=10)
+    parser.add_option('--numGens',dest='numGens',type='int',default=20)
     parser.add_option('--pop',dest='population',type='int',default=100)
     parser.add_option('--quietTests',action='store_true',dest='quietTests',default=False)
 
