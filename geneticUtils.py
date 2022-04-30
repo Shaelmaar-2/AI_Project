@@ -2,14 +2,14 @@
 Methods for genetic agents and breeding
 """
 import random as r
-from bitstring import *
+import struct
 
 
 def bitstring_to_float(s):
     """
     converts a string of 1's & 0's to a float
     """
-    return BitArray(bin=s).float
+    return struct.unpack('!f', struct.pack('!I', int(s, 2)))[0]
 
 
 def bitstring_to_twos_complement(s):
@@ -26,6 +26,7 @@ def bitstring_to_twos_complement(s):
 def cull_int(cull_prop):
     """
     Get the denominator of a fraction, up to a 1000 (to prevent infinite loop)
+    Admittedly this isn't the best way to do this
     """
     i = 1
     while i < 1000:
