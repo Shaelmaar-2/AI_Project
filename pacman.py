@@ -765,7 +765,7 @@ if __name__ == '__main__':
                 dataList.append(winrates)
                 d = {'data':dataList,'genome':best,'tournament':(best_score,best_wr)}
 
-                pkl.dump(d, open('{}_{}.pkl'.format(name,val), 'wb'))
+                pkl.dump(d, open('{}-{}.pkl'.format(name,val), 'wb'))
 
     else:
         runGames( **args )
