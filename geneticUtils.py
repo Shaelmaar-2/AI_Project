@@ -108,6 +108,8 @@ def evolve(generation, fitnss_fn, mating_size=20, cr_prob=0.80, mut_prob=None, e
         mte = pool[-2]
         res = mate(best[0], mte[0], cr_prob, mut_prob)
         next_generation.append(res[0])
+        if len(next_generation) == size:
+            break
         next_generation.append(res[1])
         if not repl:
             generation.remove(best)

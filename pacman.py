@@ -714,7 +714,7 @@ if __name__ == '__main__':
         quietTestsBool = False
         
     if args['genetic']:
-        hypes = {'cr_prob':[0.8]}
+        hypes = {'mut_prob': [5/float(252), 25/float(252), 1/float(4*252)], 'cr_prob': [0.99,0.4,0.15], 'repl': [True]}
         for name,l in hypes.items():
             for val in l:
                 population = args['population']
@@ -742,7 +742,7 @@ if __name__ == '__main__':
                 best_wr = None
                 args['numGames'] = 10
                 for i in range(len(final_fitted)):
-                    pac = GeneticAgent(final_fitted[i][0], AdvancedExtractor())
+                    pac = GeneticAgent(final_fitted[i], AdvancedExtractor())
                     args['pacman'] = pac
                     games = runGames( **args )
                     scores = [game.state.getScore() for game in games]
@@ -753,12 +753,12 @@ if __name__ == '__main__':
                     if temp_wr > best_wr:
                         best_wr = temp_wr
                         best_score = temp_score
-                        best = final_fitted[i][0]
+                        best = final_fitted[i]
                     
                     elif temp_wr == best_wr and temp_score > best_score:
                         best_wr = temp_wr
                         best_score = temp_score
-                        best = final_fitted[i][0]
+                        best = final_fitted[i]
                
                 dataList.append(gens)
                 dataList.append(avgs)
