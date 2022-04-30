@@ -534,7 +534,7 @@ def readCommand( argv ):
                       help=default('Maximum length of time an agent can spend computing in a single game'), default=30)
     parser.add_option('--gen',action='store_true',dest='genetic',
                       help='Is this a genentic agent?', default=False)
-    parser.add_option('--numGens',dest='numGens',type='int',default=20)
+    parser.add_option('--numGens',dest='numGens',type='int',default=15)
     parser.add_option('--pop',dest='population',type='int',default=100)
     parser.add_option('--quietTests',action='store_true',dest='quietTests',default=False)
 
@@ -714,29 +714,58 @@ if __name__ == '__main__':
         quietTestsBool = False
         
     if args['genetic']:
-        population = args['population']
-        pop = [reduce(str.__add__, [str(random.randint(0, 1)) for k in range(252)]) for j in range(population)]
-        fitness_fn = lambda gen: eval(gen, **args)
-        dataList = []
-        gens = []
-        avgs = []
-        winrates = []
-        numGens = args['numGens']
-        for i in range(numGens):
-            next_gen, results, fitted = evolve(pop, fitness_fn, 20, 0.8, 1/float(144))
-            pop = next_gen
-            avg = sum(results)/float(len(results))
-            winrate = gen_wins/float(len(results))
-            gens.append(i)
-            avgs.append(avg)
-            winrates.append(winrate)
-            gen_wins = 0
-            print('Generation: '+str(i), 'Average Score: '+str(avg), 'Average Winrate: '+str(winrate))
-        
-        dataList.append(gens)
-        dataList.append(avgs)
-        dataList.append(winrates)
-        pkl.dump(dataList, open('GeneticsDefault.pkl', 'wb'))
+        hypes = {'cr_prob':[0.8]}
+        for name,l in hypes.items():
+            for val in l:
+                population = args['population']
+                pop = [reduce(str.__add__, [str(random.randint(0, 1)) for k in range(252)]) for j in range(population)]
+                fitness_fn = lambda gen: eval(gen, **args)
+                dataList = []
+                gens = []
+                avgs = []
+                winrates = []
+                numGens = args['numGens']
+                final_fitted = []
+                for i in range(numGens):
+                    next_gen, results, fitted = evolve(pop, fitness_fn,**{name:val})
+                    pop = next_gen
+                    avg = sum(results)/float(len(results))
+                    winrate = gen_wins/float(len(results))
+                    gens.append(i)
+                    avgs.append(avg)
+                    winrates.append(winrate)
+                    gen_wins = 0
+                    final_fitted = fitted[-10:]
+                    print('Generation: '+str(i), 'Average Score: '+str(avg), 'Average Winrate: '+str(winrate))
+                best = None
+                best_score = None
+                best_wr = None
+                args['numGames'] = 10
+                for i in range(len(final_fitted)):
+                    pac = GeneticAgent(final_fitted[i][0], AdvancedExtractor())
+                    args['pacman'] = pac
+                    games = runGames( **args )
+                    scores = [game.state.getScore() for game in games]
+                    temp_score = sum(scores)/float(10)
+                    wins = [game.state.isWin() for game in games]
+                    temp_wr = wins.count(True)/float(10)
+
+                    if temp_wr > best_wr:
+                        best_wr = temp_wr
+                        best_score = temp_score
+                        best = final_fitted[i][0]
+                    
+                    elif temp_wr == best_wr and temp_score > best_score:
+                        best_wr = temp_wr
+                        best_score = temp_score
+                        best = final_fitted[i][0]
+               
+                dataList.append(gens)
+                dataList.append(avgs)
+                dataList.append(winrates)
+                d = {'data':dataList,'genome':best,'tournament':(best_score,best_wr)}
+
+                pkl.dump(d, open('{}_{}.pkl'.format(name,val), 'wb'))
 
     else:
         runGames( **args )
