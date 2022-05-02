@@ -299,10 +299,18 @@ class ClassicGameRules:
         if state.isLose(): self.lose(state, game)
 
     def win( self, state, game ):
+        try:
+            quietTestsBool
+        except:
+            quietTestsBool = False
         if not self.quiet and not quietTestsBool: print "Pacman emerges victorious! Score: %d" % state.data.score
         game.gameOver = True
 
     def lose( self, state, game ):
+        try:
+            quietTestsBool
+        except:
+            quietTestsBool = False
         if not self.quiet and not quietTestsBool: print "Pacman died! Score: %d" % state.data.score
         game.gameOver = True
 
