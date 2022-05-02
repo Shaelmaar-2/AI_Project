@@ -30,7 +30,7 @@ if __name__ == '__main__':
             game.run()
             
     print "\nplaying the best from the training with the best hyperparameters 10 times"
-    with open("cr_prob-0.4.pkl","rb") as bin:
+    with open("cr_prob-0.15.pkl","rb") as bin:
         data = pkl.load(bin)
         gene = data["genome"]
         pac = GeneticAgent(gene, AdvancedExtractor())        
