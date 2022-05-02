@@ -759,7 +759,8 @@ if __name__ == '__main__':
                         best_wr = temp_wr
                         best_score = temp_score
                         best = final_fitted[i]
-               
+
+                gen_wins = 0
                 dataList.append(gens)
                 dataList.append(avgs)
                 dataList.append(winrates)
