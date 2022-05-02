@@ -697,6 +697,10 @@ def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0
         winRate = wins.count(True)/ float(len(wins))
         global gen_wins
         gen_wins += wins.count(True)
+        try:
+            quietTestsBool
+        except:
+            quietTestsBool = False
         if not quietTestsBool:
             print 'Average Score:', sum(scores) / float(len(scores))
             print 'Scores:       ', ', '.join([str(score) for score in scores])
