@@ -15,7 +15,6 @@
 """
 Pacman.py holds the logic for the classic pacman game along with the main
 code to run a game.  This file is divided into three sections:
-
   (i)  Your interface to the pacman world:
           Pacman is a complex environment.  You probably don't want to
           read through all of the code we wrote to make the game runs
@@ -23,19 +22,16 @@ code to run a game.  This file is divided into three sections:
           that you will need to understand in order to complete the
           project.  There is also some code in game.py that you should
           understand.
-
   (ii)  The hidden secrets of pacman:
           This section contains all of the logic code that the pacman
           environment uses to decide who can move where, who dies when
           things collide, etc.  You shouldn't need to read this section
           of code, but you can if you want.
-
   (iii) Framework to start a game:
           The final section contains the code for reading the command
           you use to set up the game, then starting up a new game, along with
           linking in all the external parts (agent functions, graphics).
           Check this section out to see all the options available to you.
-
 To play your first game, type 'python pacman.py' from the command line.
 The keys are 'a', 's', 'd', and 'w' to move (or arrow keys).  Have fun!
 """
@@ -63,14 +59,11 @@ class GameState:
     """
     A GameState specifies the full game state, including the food, capsules,
     agent configurations and score changes.
-
     GameStates are used by the Game object to capture the actual state of the game and
     can be used by agents to reason about the game.
-
     Much of the information in a GameState is stored in a GameStateData object.  We
     strongly suggest that you access that data via the accessor methods below rather
     than referring to the GameStateData object directly.
-
     Note that in classic Pacman, Pacman is always agent 0.
     """
 
@@ -143,7 +136,6 @@ class GameState:
     def getPacmanState( self ):
         """
         Returns an AgentState object for pacman (in game.py)
-
         state.pos gives the current position
         state.direction gives the travel vector
         """
@@ -186,10 +178,8 @@ class GameState:
     def getFood(self):
         """
         Returns a Grid of boolean food indicator variables.
-
         Grids can be accessed via list notation, so to check
         if there is food at (x,y), just call
-
         currentFood = state.getFood()
         if currentFood[x][y] == True: ...
         """
@@ -198,10 +188,8 @@ class GameState:
     def getWalls(self):
         """
         Returns a Grid of boolean wall indicator variables.
-
         Grids can be accessed via list notation, so to check
         if there is a wall at (x,y), just call
-
         walls = state.getWalls()
         if walls[x][y] == True: ...
         """
@@ -299,18 +287,10 @@ class ClassicGameRules:
         if state.isLose(): self.lose(state, game)
 
     def win( self, state, game ):
-        try:
-            quietTestsBool
-        except:
-            quietTestsBool = False
         if not self.quiet and not quietTestsBool: print "Pacman emerges victorious! Score: %d" % state.data.score
         game.gameOver = True
 
     def lose( self, state, game ):
-        try:
-            quietTestsBool
-        except:
-            quietTestsBool = False
         if not self.quiet and not quietTestsBool: print "Pacman died! Score: %d" % state.data.score
         game.gameOver = True
 
@@ -663,6 +643,9 @@ def replayGame( layout, actions, display ):
 gen_wins = 0
 
 def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30, genetic=False, numGens=10, population=100, quietTests=False, ):
+    if genetic == False:
+        global quietTestsBool
+        quietTestsBool = False
     import __main__
     __main__.__dict__['_display'] = display
 
@@ -697,10 +680,6 @@ def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0
         winRate = wins.count(True)/ float(len(wins))
         global gen_wins
         gen_wins += wins.count(True)
-        try:
-            quietTestsBool
-        except:
-            quietTestsBool = False
         if not quietTestsBool:
             print 'Average Score:', sum(scores) / float(len(scores))
             print 'Scores:       ', ', '.join([str(score) for score in scores])
@@ -709,7 +688,7 @@ def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0
 
     return games
 
-def eval( genome, layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30, genetic=False, numGens=10, population=100, quietTests=False, ):
+def eval( genome, layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30, genetic=True, numGens=10, population=100, quietTests=False, ):
     """
     A helper function to run games with a genetic agent. Creates a genetic agent
     with its corresponding genome, and then runs a single game. We store the score
@@ -718,18 +697,15 @@ def eval( genome, layout, pacman, ghosts, display, numGames, record, numTraining
 
     pac = GeneticAgent(genome, AdvancedExtractor())
     import textDisplay
-    games = runGames( layout, pac, ghosts, textDisplay.NullGraphics(), numGames, record, numTraining = 0, catchExceptions=False, timeout=30, quietTests=False )
+    games = runGames( layout, pac, ghosts, textDisplay.NullGraphics(), numGames, record, numTraining = 0, catchExceptions=False, timeout=30, genetic=True, quietTests=False )
     return games[0].state.data.score
 
 if __name__ == '__main__':
     """
     The main function called when pacman.py is run
     from the command line:
-
     > python pacman.py
-
     See the usage string for more details.
-
     > python pacman.py --help
     """
     start = time.time()
