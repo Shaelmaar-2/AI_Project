@@ -1,3 +1,23 @@
+Since this code uses much of the HW3 code, we did not try to mess with which files to get rid of. For ease of grading here
+are files we created and edited:
+Files we wrote:
+	geneticUitls.py
+		File which contains the code to evolve a generation of genetic agents
+	plotting.py
+		File to plot data generated in training
+	environment.yml
+		File with the conda environment ensuring the program can be run on any machine with conda
+	demo.py
+		Our demo. Just run to see the different trained genetic learning models with separate hyperparameters 
+Files we edited:
+	pacman.py
+		Where genetic agents and Q-learning agents were trained
+	learningAgents.py
+		Where the new genetic agent class is written
+	featureExtractors.py
+		We wrote a new feature extractor for the genetic agent to use
+
+
 install python2.7 if it is not already installed, python2.7 should be the only thing you need to run this project, other versions of python2 may also work
 
 navigate to the SRC directory in the terminal
