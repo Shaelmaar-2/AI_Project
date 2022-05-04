@@ -12,12 +12,12 @@ from qlearningAgents import ApproximateQAgent
 
 if __name__ == '__main__':
     #plays the best of each hyperparameter combination tested once
-    hypes = ['cr_prob-0.4','cr_prob-0.8','cr_prob-0.15','cr_prob-0.99','cull_prop-0.75','cull_prop-0','elitism_size-5','elitism_size-10','elitism_size-20','mating_size-2','mating_size-10','mating_size-50','mut_prob-0.0198412698413','mut_prob-0.0992063492063','mut_prob-0.000992063492063','repl-True']
+    hypes = ['cr_prob-0.4','Defaults','cr_prob-0.15','cr_prob-0.99','cull_prop-0.75','cull_prop-0','elitism_size-5','elitism_size-10','elitism_size-20','mating_size-2','mating_size-10','mating_size-50','mut_prob-0.0198412698413','mut_prob-0.0992063492063','mut_prob-0.000992063492063','repl-True']
     lay = layout.getLayout("mediumClassic")
     ghosts = [DirectionalGhost(1),DirectionalGhost(2)]
     rules = ClassicGameRules()    
     for name in hypes:
-        with open("{}.pkl".format(name),"rb") as bin:
+        with open("data/{}.pkl".format(name),"rb") as bin:
             print "\nplaying the best from "+name
             data = pkl.load(bin)
             gene = data["genome"]
