@@ -532,6 +532,8 @@ def readCommand( argv ):
     # Prevents print statements while the genetic agent is learning, this significantly cuts down runtime
     parser.add_option('--quietTests',action='store_true',dest='quietTests',default=False,
                       help='Mutes all print statements outside of the main function')
+    parser.add_option('--filename',dest='filename',type='string',
+                      help='Name of file where data will be saved',default='Defaults')
 
     options, otherjunk = parser.parse_args(argv)
     if len(otherjunk) != 0:
@@ -585,6 +587,7 @@ def readCommand( argv ):
     args['numGens'] = options.numGens
     args['population'] = options.population
     args['quietTests'] = options.quietTests
+    args['filename'] = options.filename
 
     # Special case: recorded games don't use the runGames method or args structure
     if options.gameToReplay != None:
@@ -642,7 +645,7 @@ def replayGame( layout, actions, display ):
 
 gen_wins = 0
 
-def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30, genetic=False, numGens=10, population=100, quietTests=False, ):
+def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30, genetic=False, numGens=10, population=100, quietTests=False, filename='Default' ):
     if genetic == False:
         global quietTestsBool
         quietTestsBool = False
@@ -688,7 +691,7 @@ def runGames( layout, pacman, ghosts, display, numGames, record, numTraining = 0
 
     return games
 
-def eval( genome, layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30, genetic=True, numGens=10, population=100, quietTests=False, ):
+def eval( genome, layout, pacman, ghosts, display, numGames, record, numTraining = 0, catchExceptions=False, timeout=30, genetic=True, numGens=10, population=100, quietTests=False, filename='Default' ):
     """
     A helper function to run games with a genetic agent. Creates a genetic agent
     with its corresponding genome, and then runs a single game. We store the score
@@ -790,8 +793,9 @@ if __name__ == '__main__':
                 dataList.append(avgs)
                 dataList.append(winrates)
                 d = {'data':dataList,'genome':best,'tournament':(best_score,best_wr)}
+                file = args['filename']
 
-                pkl.dump(d, open('{}-{}.pkl'.format(name,val), 'wb'))
+                pkl.dump(d, open(file+'.pkl', 'wb'))
 
     else:
         runGames( **args )

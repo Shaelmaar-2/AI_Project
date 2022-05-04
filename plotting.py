@@ -1,14 +1,15 @@
 import pickle as pkl
 import matplotlib.pyplot as plt
 
-dataList = pkl.load(open('GeneticsDefault.pkl', 'rb'))
+d = pkl.load(open('Defaults.pkl', 'rb'))
+dataList = d['data']
 fig, axs = plt.subplots(2,sharex=True)
-fig.suptitle('Average Winrates and Scores over each Generation')
+fig.suptitle('Average Winrates and Scores over each Generation (Cr Prob = 0.15)')
 axs[0].plot(dataList[0],dataList[1])
 axs[1].plot(dataList[0],dataList[2])
 axs[1].set(xlabel='Generation',ylabel='Average Winrate')
 axs[0].set(ylabel='Average Score')
-plt.savefig('GeneticsDefault.png')
+plt.savefig('Defaults.png')
 
 """dataList = pkl.load(open('ApproxQLearning.pkl', 'rb'))
 plt.plot(dataList[0],dataList[1],label='Windowed Average')
